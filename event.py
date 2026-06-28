@@ -34,11 +34,35 @@ class OrderEvent(Event):
             f"Direction={self.direction}"
         )
 
-order = OrderEvent(
-    symbol="AAPL",
-    order_type="MKT",
-    quantity=100,
-    direction="BUY",
-)
+class FillEvent(Event):
+    #represents an executed order
+    def __init__(
+            self,
+            timeindex,
+            symbol,
+            exchange,
+            quantity,
+            direction,
+            fill_cost,
+            commission=None,
+    ):
+        self.type = "FILL"
+        self.timeindex = timeindex
+        self.symbol = symbol
+        self.exchange = exchange
+        self.quantity = quantity
+        self.direction = direction
+        self.fill_cost = fill_cost
 
-order.print_order()
+        if commission is None:
+            self.commission = self.calculate_commission()
+        else:
+            self.commission = commission
+
+    def calculate_commission(self):
+        #calculates a simple simulated broker commission
+        if self.quantity <= 500:
+            return max(1.30, 0.013 * self.quantity)
+        
+        return max(1.30, 0.08 * self.quantity)
+    
