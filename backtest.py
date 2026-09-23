@@ -75,6 +75,7 @@ class Backtest:
 
         if event.type == "MARKET":
             self.strategy.calculate_signals(event)
+            self.portfolio.update_timeindex(event)
             # portfolio.update_timeindex(event) will go here later
 
         elif event.type == "SIGNAL":

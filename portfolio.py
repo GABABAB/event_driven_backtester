@@ -171,3 +171,47 @@ class NaivePortfolio(Portfolio):
         if event.type == "FILL":
             self.update_positions_from_fill(event)
             self.update_holdings_from_fill(event)
+
+    def update_timeindex(self, event):
+        """
+        Adds a new record to the positions and holdings history,
+        marking the current market value of all positions.
+        """
+
+        latest_datetime = self.bars.get_latest_bar_datetime(
+            self.symbol_list[0]
+        )
+
+        # --- Positions snapshot ---
+        current_positions_record = {
+            symbol: self.current_positions[symbol]
+            for symbol in self.symbol_list
+        }
+        current_positions_record["datetime"] = latest_datetime
+
+        self.all_positions.append(current_positions_record)
+
+        # --- Holdings snapshot ---
+        current_holdings_record = {
+            "datetime": latest_datetime,
+            "cash": self.current_holdings["cash"],
+            "commission": self.current_holdings["commission"],
+        }
+
+        total_value = self.current_holdings["cash"]
+
+        for symbol in self.symbol_list:
+            market_price = self.bars.get_latest_bar_value(symbol, "Close")
+            market_value = self.current_positions[symbol] * market_price
+
+            current_holdings_record[symbol] = market_value
+            total_value += market_value
+
+        current_holdings_record["total"] = total_value
+
+        self.all_holdings.append(current_holdings_record)
+
+        # Keep current_holdings consistent with the latest snapshot
+        self.current_holdings["total"] = total_value
+        for symbol in self.symbol_list:
+            self.current_holdings[symbol] = current_holdings_record[symbol]
